@@ -5,9 +5,11 @@ class Category(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
 
+
 class Genre(models.Model):
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
+
 
 class Title(models.Model):
     name = models.CharField(max_length=200)
@@ -22,7 +24,8 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class genre_title(models.Model):
     title_id = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='title'
