@@ -5,8 +5,8 @@ from api.views import TitleViewSet, GenreViewSet, CategoryViewSet
 
 router = routers.DefaultRouter()
 router.register(r'titles', TitleViewSet)
-router.register(r'categories', GenreViewSet)
-router.register(r'genres', CategoryViewSet)
+router.register(r'categories', CategoryViewSet)
+router.register(r'genres', GenreViewSet)
 
 
 urlpatterns = [
