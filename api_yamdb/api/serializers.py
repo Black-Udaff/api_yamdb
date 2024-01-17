@@ -24,9 +24,10 @@ class TitleSerializer(serializers.ModelSerializer):
     category = SlugRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
+    description = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
-        fields = ['name', 'year', 'description', 'genre', 'category']
+        fields = ['id', 'name', 'year', 'description', 'genre', 'category']
         model = Title
 
     def create(self, validated_data):
@@ -35,3 +36,15 @@ class TitleSerializer(serializers.ModelSerializer):
         for genre_data in genres_data:
             genre_title.objects.create(title_id=title, genre_id=genre_data)
         return title
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.year = validated_data.get('year', instance.year)
+        instance.genre.set(validated_data.get('genre', instance.genre.all()))
+        instance.category = validated_data.get('category', instance.category)
+
+        if 'description' in validated_data:
+            instance.description = validated_data.get('description')
+
+        instance.save()
+        return instance
