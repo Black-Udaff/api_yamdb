@@ -26,6 +26,38 @@ class TitleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+<<<<<<< Updated upstream
+=======
+        fields = ['name', 'year', 'description', 'genre', 'category']
+        model = Titlefrom rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
+
+
+from reviews.models import Title, Genre, Category, genre_title
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug')
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        many=True, slug_field='slug', queryset=Genre.objects.all()
+    )
+    category = SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+
+    class Meta:
+>>>>>>> Stashed changes
         fields = ('name', 'year', 'description', 'genre', 'category')
         model = Title
 
