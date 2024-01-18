@@ -38,14 +38,18 @@ class TitleSerializer(serializers.ModelSerializer):
     category = SlugRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
+    description = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
-        fields = ('name', 'year', 'description', 'genre', 'category')
+        fields = ['id', 'name', 'year', 'description', 'genre', 'category']
         model = Title
 
-    def create(self, validated_data):
-        genres_data = validated_data.pop('genre')
-        title = Title.objects.create(**validated_data)
-        for genre_data in genres_data:
-            genre_title.objects.create(title_id=title, genre_id=genre_data)
-        return title
+    def to_representation(self, instance):
+        # Получаем стандартное представление данных
+        representation = super(TitleSerializer, self).to_representation(instance)
+
+        representation['genre'] = GenreSerializer(instance.genre.all(), many=True).data
+        if instance.category:
+            representation['category'] = CategorySerializer(instance.category).data
+
+        return representation
