@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
-
-from reviews.models import Title, Genre, Category, User
+from django.core.validators import MaxLengthValidator
+from reviews.models import Title, Genre, Category, CustomUser
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -12,8 +12,8 @@ class SignUpSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'role')
+        model = CustomUser
+        fields = ('id', 'username', 'email', 'bio', 'first_name', 'last_name')
 
 
 class GenreSerializer(serializers.ModelSerializer):

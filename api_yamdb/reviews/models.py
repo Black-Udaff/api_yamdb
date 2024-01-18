@@ -3,7 +3,7 @@ from django.db import models
 from django.core.validators import MaxLengthValidator, RegexValidator
 
 
-class User(AbstractUser):
+class CustomUser(AbstractUser):
     username_validator = RegexValidator(
         r'^[\w.@+-]+$',
     )
@@ -14,9 +14,7 @@ class User(AbstractUser):
         validators=[username_validator, MaxLengthValidator(150)],
         help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'
     )
-    first_name = models.CharField(max_length=150, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
-    bio = models.TextField(blank=True)
+    bio = models.TextField('Биография', blank=True)
     role = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
