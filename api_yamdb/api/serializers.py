@@ -2,18 +2,32 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 from django.core.validators import MaxLengthValidator
-from reviews.models import Title, Genre, Category, CustomUser
-
-
-class SignUpSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=254)
-    username = serializers.CharField(max_length=150)
+from reviews.models import Title, Genre, Category, User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
+    email = serializers.EmailField(max_length=254)
+
     class Meta:
-        model = CustomUser
-        fields = ('id', 'username', 'email', 'bio', 'first_name', 'last_name')
+        model = User
+        fields = ('username', 'email')
+
+    def validate(self, data):
+        if User.objects.filter(
+                username=data.get('username'), email=data.get('email')
+        ):
+            return data
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('Вы не можете использовать это имя')
+        return value
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
+    confirmation_code = serializers.CharField(required=True)
 
 
 class GenreSerializer(serializers.ModelSerializer):

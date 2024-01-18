@@ -1,9 +1,17 @@
+from django.contrib.auth import get_user_model
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.validators import MaxLengthValidator, RegexValidator
+from django.core.validators import RegexValidator
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
+
+    class Role(models.TextChoices):
+        USER = 'user', 'User'
+        ADMIN = 'admin', 'Admin'
+        MODERATOR = 'moderator', 'Moderator'
+
     username_validator = RegexValidator(
         r'^[\w.@+-]+$',
     )
@@ -11,14 +19,22 @@ class CustomUser(AbstractUser):
     username = models.CharField(
         max_length=150,
         unique=True,
-        validators=[username_validator, MaxLengthValidator(150)],
-        help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'
+        validators=[username_validator]
     )
-    bio = models.TextField('Биография', blank=True)
-    role = models.CharField(max_length=255, blank=True)
+    bio = models.TextField('Биография', blank=True, null=True)
+    role = models.CharField(
+        choices=Role.choices, default=Role.USER, max_length=10
+    )
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
 
-    def __str__(self):
-        return self.username
+    @property
+    def is_admin(self):
+        return self.role == self.Role.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == self.Role.MODERATOR
 
 
 class Category(models.Model):
