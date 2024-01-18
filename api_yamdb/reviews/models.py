@@ -1,4 +1,24 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import MaxLengthValidator, RegexValidator
+
+
+class CustomUser(AbstractUser):
+    username_validator = RegexValidator(
+        r'^[\w.@+-]+$',
+    )
+    email = models.EmailField(unique=True, max_length=254)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[username_validator, MaxLengthValidator(150)],
+        help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'
+    )
+    bio = models.TextField('Биография', blank=True)
+    role = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
