@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import CustomUser
+from .models import User
 
 UserAdmin.fieldsets += (
     # Добавляем кортеж, где первый элемент — это название раздела в админке,
@@ -9,4 +9,4 @@ UserAdmin.fieldsets += (
     ('Extra Fields', {'fields': ('bio', 'role')}),
 )
 
-admin.site.register(CustomUser, UserAdmin)
+admin.site.register(User, UserAdmin)
