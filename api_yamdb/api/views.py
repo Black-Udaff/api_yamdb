@@ -9,8 +9,12 @@ from .serializers import (
     SignUpSerializer
 )
 from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
+
+
+
 
 
 class SignUpView(generics.CreateAPIView):
@@ -37,9 +41,11 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    pagination_class = LimitOffsetPagination
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -50,5 +56,3 @@ class GenreViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
-
