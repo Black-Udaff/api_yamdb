@@ -6,13 +6,19 @@ from .serializers import (
     CategorySerializer,
     GenreSerializer,
     UserSerializer,
-    TokenSerializer
+    TokenSerializer,
+    SignUpSerializer,
 )
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from api.sending_mail import send_email_to_user
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework_simplejwt.tokens import RefreshToken
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TitleFilter
+from rest_framework.filters import SearchFilter
 
 User = get_user_model()
 
@@ -62,15 +68,20 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
-
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
