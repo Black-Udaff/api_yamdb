@@ -2,8 +2,12 @@ from django.contrib.auth import get_user_model
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MaxValueValidator, MinValueValidator
 
+
+MAX_LENGTH_TITLE = 15
+MIN_SCORE = 1
+MAX_SCORE = 10
 
 class User(AbstractUser):
 
@@ -77,3 +81,40 @@ class genre_title(models.Model):
     genre_id = models.ForeignKey(
         Genre, on_delete=models.CASCADE, related_name='genre'
     )
+
+
+
+class Review(models.Model):
+    title_id = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name='reviews',
+        verbose_name='Произведение'
+    )
+    text = models.TextField('Текст отзыва')
+    author = models.CharField(max_length=256)
+    #author = models.ForeignKey(
+    #    User, on_delete=models.CASCADE, related_name='user',
+    #    verbose_name='Автор отзыва'
+    #)
+    score = models.IntegerField(
+        'Оценка',
+        validators=[MaxValueValidator(MAX_SCORE),
+                    MinValueValidator(MIN_SCORE)]
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации отзыва', auto_now_add=True
+    )
+
+    class Meta:
+        verbose_name = 'отзыв'
+        verbose_name_plural = 'Отзывы'
+        ordering = ('pub_date',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('title_id', 'author'),
+                name='unique_title_author'
+            )
+        ]
+
+    def __str__(self):
+        #return f'{self.author}: {self.text}'[:MAX_LENGTH_TITLE]
+        return self.text[:MAX_LENGTH_TITLE]

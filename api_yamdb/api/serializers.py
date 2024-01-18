@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 from django.core.validators import MaxLengthValidator
-from reviews.models import Title, Genre, Category, User
+from reviews.models import Title, Genre, Category, User, Review
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -57,7 +57,6 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
     def to_representation(self, instance):
-        # Получаем стандартное представление данных
         representation = (
             super(TitleSerializer, self).to_representation(instance)
         )
@@ -71,3 +70,22 @@ class TitleSerializer(serializers.ModelSerializer):
             )
 
         return representation
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+
+    title_id = serializers.PrimaryKeyRelatedField(
+        read_only=True, default=serializers.CreateOnlyDefault(None)
+    )
+
+    class Meta:
+        fields = ('id', 'title_id', 'text', 'author', 'score', 'pub_date')
+        model = Review
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('title_id', 'author'),
+                message='Вы уже оставляли отзыв на это произведение.'
+            )
+        ]
