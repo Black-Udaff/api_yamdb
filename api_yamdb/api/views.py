@@ -6,15 +6,15 @@ from .serializers import (
     CategorySerializer,
     GenreSerializer,
     UserSerializer,
-    SignUpSerializer
+    SignUpSerializer,
 )
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
-
-
-
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TitleFilter
+from rest_framework.filters import SearchFilter
 
 
 class SignUpView(generics.CreateAPIView):
@@ -39,10 +39,6 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
-
-from django_filters.rest_framework import DjangoFilterBackend
-from .filters import TitleFilter
-from rest_framework.filters import SearchFilter
 
 
 class TitleViewSet(viewsets.ModelViewSet):
