@@ -7,7 +7,6 @@ from .serializers import (
     GenreSerializer,
     UserSerializer,
     TokenSerializer,
-    SignUpSerializer,
 )
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.response import Response
