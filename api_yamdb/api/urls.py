@@ -8,8 +8,8 @@ from api.views import (CategoryViewSet, CommentViewSet, CreateJWTTokenView,
 
 router = routers.DefaultRouter()
 router.register(r'titles', TitleViewSet)
-router.register(r'categories', GenreViewSet)
 router.register(r'genres', CategoryViewSet)
+router.register(r'categories', GenreViewSet)
 router.register(
     r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='review'
 )
