@@ -1,3 +1,4 @@
+from datetime import datetime
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
@@ -56,6 +57,12 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'year', 'description', 'genre', 'category']
         model = Title
 
+    def validate_year(self, value):
+        print(datetime.now().year)
+        if value > datetime.now().year:
+            raise serializers.ValidationError('произведение еще не вышло')
+        return value
+
     def to_representation(self, instance):
         representation = (
             super(TitleSerializer, self).to_representation(instance)
@@ -73,7 +80,6 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-
 
     title_id = serializers.PrimaryKeyRelatedField(
         read_only=True, default=serializers.CreateOnlyDefault(None)
