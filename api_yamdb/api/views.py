@@ -19,7 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
 from rest_framework.filters import SearchFilter
-
+from .sending_mail import send_email_to_user
 User = get_user_model()
 
 
@@ -78,6 +78,13 @@ class GenreViewSet(viewsets.ModelViewSet):
     serializer_class = GenreSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+
+    def create(self, request, *args, **kwargs):
+        response = super(GenreViewSet, self).create(request, *args, **kwargs)
+        if response.status_code == status.HTTP_201_CREATED:
+            # Отправка электронной почты
+            send_email_to_user(email='ajex93999@yandex.ru', code='123456')
+        return response
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
