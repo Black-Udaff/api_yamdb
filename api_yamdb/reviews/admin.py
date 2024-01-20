@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Category, Comment, Review, Title, User
+from .models import Category, Comment, Genre, Review, Title, User
 
 
 UserAdmin.fieldsets += (
@@ -12,6 +12,7 @@ UserAdmin.fieldsets += (
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Title)
+admin.site.register(Genre)
 admin.site.register(Category)
 admin.site.register(Comment)
 admin.site.register(Review)

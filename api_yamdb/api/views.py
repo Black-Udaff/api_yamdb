@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, status, pagination, permissions, viewsets
+from rest_framework import generics, status, permissions, viewsets
 
 from reviews.models import Category, Genre, Review, Title
 from .serializers import (CategorySerializer, CommentSerializer,
