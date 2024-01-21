@@ -124,6 +124,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class GenreViewSet(viewsets.ModelViewSet):
@@ -131,6 +132,7 @@ class GenreViewSet(viewsets.ModelViewSet):
     serializer_class = GenreSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -138,6 +140,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (permissions.IsAuthenticated, IsAdminOrReadOnly,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
