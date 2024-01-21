@@ -93,29 +93,3 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
-
-class ReviewViewSet(viewsets.ModelViewSet):
-    serializer_class = ReviewSerializer
-    permission_classes = [
-        IsAuthenticated,
-    ]
-
-    def get_title(self):
-        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-
-    def get_queryset(self):
-        return self.get_title().reviews.all()
-
-    def perform_create(self, serializer):
-        # title_id = self.kwargs.get('title_id')
-        author = self.request.user
-
-        if Review.objects.filter(
-            title_id=self.kwargs.get('title_id'), author=author
-        ).exists():
-            raise ValidationError(
-                'Вы уже оставляли отзыв на это произведение.'
-            )
-        title_id = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-
-        serializer.save(author=self.request.user, title_id=title_id)
