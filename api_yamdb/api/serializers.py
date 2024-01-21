@@ -14,11 +14,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'email')
 
-    def validate(self, data):
-        if User.objects.filter(
-                username=data.get('username'), email=data.get('email')
-        ):
-            return data
+    # def validate(self, data):
+    #     if User.objects.filter(
+    #             username=data.get('username'), email=data.get('email')
+    #     ):
+    #         return data
 
     def validate_username(self, value):
         if value == 'me':
@@ -84,14 +84,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     title_id = serializers.PrimaryKeyRelatedField(
         read_only=True, default=serializers.CreateOnlyDefault(None)
     )
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
 
     class Meta:
         fields = ('id', 'title_id', 'text', 'author', 'score', 'pub_date')
         model = Review
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('title_id', 'author'),
-                message='Вы уже оставляли отзыв на это произведение.'
-            )
-        ]
+        read_only_fields = ('author',)
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=Review.objects.all(),
+        #         fields=('title_id', 'author'),
+        #         message='Вы уже оставляли отзыв на это произведение.'
+        #     )
+        # ]

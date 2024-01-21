@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.forms import ValidationError
 from rest_framework import generics, status, views, permissions, viewsets
-from reviews.models import Title, Genre, Category
+from reviews.models import Title, Genre, Category, User, Review
 from .serializers import (
     TitleSerializer,
     CategorySerializer,
@@ -20,7 +21,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
 from rest_framework.filters import SearchFilter
 from .sending_mail import send_email_to_user
-User = get_user_model()
+from rest_framework.permissions import IsAuthenticated
 
 
 class SignUpView(generics.CreateAPIView):
@@ -31,10 +32,16 @@ class SignUpView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.get_or_create(**serializer.validated_data)
-        token = default_token_generator.make_token(user)
-        send_email_to_user(email=user.email, code=token)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user, created = User.objects.get_or_create(**serializer.validated_data)
+        if created:
+            token = default_token_generator.make_token(user)
+            send_email_to_user(email=user.email, code=token)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(
+                {"message": "User already exists"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class CreateJWTTokenView(generics.CreateAPIView):
@@ -79,13 +86,6 @@ class GenreViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
-    def create(self, request, *args, **kwargs):
-        response = super(GenreViewSet, self).create(request, *args, **kwargs)
-        if response.status_code == status.HTTP_201_CREATED:
-            # Отправка электронной почты
-            send_email_to_user(email='ajex93999@yandex.ru', code='123456')
-        return response
-
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -93,17 +93,13 @@ class CategoryViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
+
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = [
+        IsAuthenticated,
+    ]
 
-    # def get_title(self):
-    #     return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-
-    # def get_queryset(self):
-    #     return self.get_title().reviews.all()
-
-    # #def perform_create(self, serializer):
-    # #    serializer.save(author=self.request.user)
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
@@ -111,6 +107,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
+        # title_id = self.kwargs.get('title_id')
+        author = self.request.user
+
+        if Review.objects.filter(
+            title_id=self.kwargs.get('title_id'), author=author
+        ).exists():
+            raise ValidationError(
+                'Вы уже оставляли отзыв на это произведение.'
+            )
         title_id = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
-        serializer.save( title_id=title_id)
-    
+
+        serializer.save(author=self.request.user, title_id=title_id)

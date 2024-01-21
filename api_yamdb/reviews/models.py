@@ -90,7 +90,9 @@ class Review(models.Model):
         verbose_name='Произведение'
     )
     text = models.TextField('Текст отзыва')
-    author = models.CharField(max_length=256)
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reviews'
+    )
     #author = models.ForeignKey(
     #    User, on_delete=models.CASCADE, related_name='user',
     #    verbose_name='Автор отзыва'
