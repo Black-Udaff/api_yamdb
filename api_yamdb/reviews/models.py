@@ -81,7 +81,6 @@ class genre_title(models.Model):
     )
 
 
-
 class Review(models.Model):
     title_id = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews',
@@ -89,12 +88,9 @@ class Review(models.Model):
     )
     text = models.TextField('Текст отзыва')
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews'
+        User, on_delete=models.CASCADE, related_name='reviews',
+        verbose_name='Автор отзыва'
     )
-    #author = models.ForeignKey(
-    #    User, on_delete=models.CASCADE, related_name='user',
-    #    verbose_name='Автор отзыва'
-    #)
     score = models.IntegerField(
         'Оценка',
         validators=[MaxValueValidator(MAX_SCORE),
@@ -116,5 +112,26 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        #return f'{self.author}: {self.text}'[:MAX_LENGTH_TITLE]
-        return self.text[:MAX_LENGTH_TITLE]
+        return f'{self.author}: {self.text}'[:MAX_LENGTH_TITLE]
+
+
+class Comment(models.Model):
+    review_id = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Отзыв'
+    )
+    text = models.TextField('Текст комментария')
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Автор отзыва'
+    )
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True
+    )
+
+    class Meta:
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return f'{self.author}: {self.text}'[:MAX_LENGTH_TITLE]

@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework import generics, status, permissions, viewsets, filters
 from rest_framework.pagination import PageNumberPagination
 from .serializers import (
+    CommentSerializer,
     TitleSerializer,
     CategorySerializer,
     GenreSerializer,
@@ -123,11 +124,16 @@ class UserViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -139,9 +145,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [
-        IsAuthenticated,
-    ]
+    permission_classes = (permissions.AllowAny,)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -150,15 +154,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        # title_id = self.kwargs.get('title_id')
-        author = self.request.user
+        serializer.save(author=self.request.user, title_id=self.get_title())
 
-        if Review.objects.filter(
-            title_id=self.kwargs.get('title_id'), author=author
-        ).exists():
-            raise ValidationError(
-                'Вы уже оставляли отзыв на это произведение.'
-            )
-        title_id = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
-        serializer.save(author=self.request.user, title_id=title_id)
+class CommentViewSet(viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def get_review(self):
+        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review_id=self.get_review())
