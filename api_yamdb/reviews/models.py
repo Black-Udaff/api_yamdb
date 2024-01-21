@@ -7,6 +7,7 @@ from django.core.validators import (MaxValueValidator, MinValueValidator,
 MAX_LENGTH_TITLE = 15
 MIN_SCORE = 1
 MAX_SCORE = 10
+SCORE_ERROR = 'Введите целое число от 1 до 10'
 
 
 class User(AbstractUser):
@@ -95,8 +96,8 @@ class Review(models.Model):
     )
     score = models.IntegerField(
         'Оценка',
-        validators=[MaxValueValidator(MAX_SCORE),
-                    MinValueValidator(MIN_SCORE)]
+        validators=[MaxValueValidator(MAX_SCORE, message=SCORE_ERROR),
+                    MinValueValidator(MIN_SCORE, message=SCORE_ERROR)]
     )
     pub_date = models.DateTimeField(
         'Дата публикации отзыва', auto_now_add=True

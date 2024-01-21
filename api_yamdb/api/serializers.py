@@ -62,7 +62,6 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ['id', 'name', 'year', 'rating', 'description', 'genre', 'category']
         model = Title
-        read_only_fields = ('rating',)
 
     def to_representation(self, instance):
         # Получаем стандартное представление данных
