@@ -1,6 +1,6 @@
-from django.forms import ValidationError
-from rest_framework import generics, status, views, permissions, viewsets
-from reviews.models import Title, Genre, Category, User, Review
+from django.contrib.auth import get_user_model
+from rest_framework import generics, status, permissions, viewsets
+from reviews.models import Title, Genre, Category, Review
 from rest_framework.decorators import action
 from rest_framework import generics, status, permissions, viewsets, filters
 from rest_framework.pagination import PageNumberPagination
@@ -13,7 +13,6 @@ from .serializers import (
     TokenSerializer,
     ReviewSerializer,
     UserAdminEditSerializer,
-    UserEditSerializer,
     SignUpSerializer
 )
 from django.contrib.auth.tokens import default_token_generator
@@ -22,12 +21,9 @@ from django.shortcuts import get_object_or_404
 from api.sending_mail import send_email_to_user
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
 from rest_framework.filters import SearchFilter
-from .sending_mail import send_email_to_user
-from rest_framework.permissions import IsAuthenticated
 from api.permissions import (
     IsAdminOrReadOnly,
     IsAdmin,
@@ -35,6 +31,7 @@ from api.permissions import (
     IsAuthor,
 )
 
+User = get_user_model()
 
 
 class SignUpView(generics.CreateAPIView):
@@ -45,21 +42,21 @@ class SignUpView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user, created = User.objects.get_or_create(**serializer.validated_data)
-        if created:
-            token = default_token_generator.make_token(user)
-            send_email_to_user(email=user.email, code=token)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {"message": "User already exists"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # 
-        # user, _ = User.objects.get_or_create(**serializer.validated_data)
-        # token = default_token_generator.make_token(user)
-        # send_email_to_user(email=user.email, code=token)
-        # return Response(serializer.data, status=status.HTTP_200_OK)
+        # user, created = User.objects.get_or_create(**serializer.validated_data)
+        # if created:
+        #     token = default_token_generator.make_token(user)
+        #     send_email_to_user(email=user.email, code=token)
+        #     return Response(serializer.data, status=status.HTTP_200_OK)
+        # else:
+        #     return Response(
+        #         {"message": "User already exists"},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
+
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        token = default_token_generator.make_token(user)
+        send_email_to_user(email=user.email, code=token)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CreateJWTTokenView(generics.CreateAPIView):

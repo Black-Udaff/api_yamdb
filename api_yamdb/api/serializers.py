@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from django.core.validators import MaxLengthValidator
+# from django.core.validators import MaxLengthValidator
 
 
 from reviews.models import Category, Genre, Comment, Review, Title
@@ -124,12 +124,12 @@ class TitleSerializer(serializers.ModelSerializer):
                 instance.category).data
 
         return representation
-    
+
     def validate_year(self, value):
         print(datetime.now().year)
         if value > datetime.now().year:
             raise serializers.ValidationError('произведение еще не вышло')
-        return value    
+        return value
 
     def get_rating(self, obj):
         title = get_object_or_404(Title, pk=obj.pk)
