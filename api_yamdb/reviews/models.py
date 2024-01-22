@@ -54,7 +54,7 @@ class genre_title(models.Model):
 
 
 class Review(models.Model):
-    title_id = models.ForeignKey(
+    title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews',
         verbose_name='Произведение'
     )
@@ -78,13 +78,13 @@ class Review(models.Model):
         ordering = ('pub_date',)
         constraints = [
             models.UniqueConstraint(
-                fields=('title_id', 'author'),
+                fields=('title', 'author'),
                 name='unique_title_author'
             )
         ]
 
     def __str__(self):
-        return f'{self.author}: {self.text}'[:MAX_LENGTH_TITLE]
+        return f'Отзыв {self.author} на {self.title}'[:MAX_LENGTH_TITLE]
 
 
 class Comment(models.Model):
@@ -95,7 +95,7 @@ class Comment(models.Model):
     text = models.TextField('Текст комментария')
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='comments',
-        verbose_name='Автор отзыва'
+        verbose_name='Автор'
     )
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True

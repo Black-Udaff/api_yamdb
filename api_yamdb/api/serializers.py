@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-# from django.core.validators import MaxLengthValidator
 
 
 from reviews.models import Category, Genre, Comment, Review, Title
@@ -88,12 +87,14 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ['name', 'slug']
+        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['name', 'slug']
+        lookup_field = 'slug'
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -136,7 +137,7 @@ class TitleSerializer(serializers.ModelSerializer):
         rating = rating_dict.get('score')
         if rating:
             return round(rating)
-        return 0
+        return None
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -149,7 +150,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
 
-    def validate(self, data):
+    def create(self, validated_data):
         title_id = self.context['view'].kwargs.get('title_id')
         reviews = get_object_or_404(Title, pk=title_id).reviews.all()
         if self.context['request'].user.id in reviews.values_list(
@@ -157,7 +158,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError(
                 'Вы уже оставляли отзыв на это произведение.')
-        return data
+        return Review.objects.create(**validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):

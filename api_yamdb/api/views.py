@@ -30,6 +30,8 @@ from api.permissions import (
     IsModerator,
     IsAuthor,
 )
+from rest_framework import mixins
+from rest_framework.viewsets import GenericViewSet
 
 User = get_user_model()
 
@@ -126,26 +128,41 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
     permission_classes = (IsAdminOrReadOnly,)
 
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            # Запретить PUT запросы
+            return Response({'detail': 'PUT method is not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-class GenreViewSet(viewsets.ModelViewSet):
+        # Для PATCH запросов вызывать стандартную реализацию
+        return super().update(request, *args, **kwargs)
+
+
+class GenreViewSet(
+    mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, GenericViewSet
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
-    permission_classes = (permissions.IsAuthenticated, IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (permissions.AllowAny,)
+    http_method_names = [
+        'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
+    ]
+    permission_classes = (IsAuthor | IsModerator | IsAdmin,)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -154,12 +171,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title_id=self.get_title())
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (permissions.AllowAny,)
+    http_method_names = [
+        'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
+    ]
+    permission_classes = (IsAuthor | IsModerator | IsAdmin,)
 
     def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
