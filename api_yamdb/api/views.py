@@ -30,6 +30,15 @@ from api.permissions import (
     IsModerator,
     IsAuthor,
 )
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin)
+from rest_framework.viewsets import GenericViewSet
+
+
+class ModelMixinSet(CreateModelMixin, ListModelMixin,
+                    DestroyModelMixin, GenericViewSet):
+    pass
+
 
 User = get_user_model()
 
@@ -42,17 +51,6 @@ class SignUpView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # user, created = User.objects.get_or_create(**serializer.validated_data)
-        # if created:
-        #     token = default_token_generator.make_token(user)
-        #     send_email_to_user(email=user.email, code=token)
-        #     return Response(serializer.data, status=status.HTTP_200_OK)
-        # else:
-        #     return Response(
-        #         {"message": "User already exists"},
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
-
         user, _ = User.objects.get_or_create(**serializer.validated_data)
         token = default_token_generator.make_token(user)
         send_email_to_user(email=user.email, code=token)
@@ -82,7 +80,7 @@ class CreateJWTTokenView(generics.CreateAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated, IsAdmin,)
+    permission_classes = (IsAdmin,)
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
@@ -125,27 +123,31 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (IsAdminOrReadOnly,)
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(ModelMixinSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (SearchFilter,)
-    search_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (SearchFilter,)
+    permission_classes = (IsAdminOrReadOnly,)
     search_fields = ('name',)
-    permission_classes = (permissions.IsAuthenticated, IsAdminOrReadOnly,)
+    lookup_field = 'slug'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAdmin | IsModerator | IsAuthor,)
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -159,7 +161,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAdmin | IsModerator | IsAuthor,)
+    http_method_names = ['get', 'post', 'delete', 'patch']
 
     def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
