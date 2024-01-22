@@ -88,12 +88,15 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ['name', 'slug']
+        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['name', 'slug']
+        lookup_field = 'slug'
+
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -137,7 +140,7 @@ class TitleSerializer(serializers.ModelSerializer):
         rating = rating_dict.get('score')
         if rating:
             return round(rating)
-        return 0
+        return None
 
 
 class ReviewSerializer(serializers.ModelSerializer):

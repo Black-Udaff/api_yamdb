@@ -1,3 +1,4 @@
+from rest_framework.exceptions import NotFound
 from django.contrib.auth import get_user_model
 from rest_framework import generics, status, permissions, viewsets
 from reviews.models import Title, Genre, Category, Review
@@ -13,7 +14,7 @@ from .serializers import (
     TokenSerializer,
     ReviewSerializer,
     UserAdminEditSerializer,
-    SignUpSerializer
+    SignUpSerializer,
 )
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.response import Response
@@ -30,6 +31,8 @@ from api.permissions import (
     IsModerator,
     IsAuthor,
 )
+from rest_framework import mixins
+from rest_framework.viewsets import GenericViewSet
 
 User = get_user_model()
 
@@ -82,10 +85,13 @@ class CreateJWTTokenView(generics.CreateAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated, IsAdmin,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        IsAdmin,
+    )
     lookup_field = 'username'
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('username', )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
     pagination_class = PageNumberPagination
     http_method_names = ['get', 'post', 'delete', 'patch']
 
@@ -93,25 +99,24 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=['GET', 'PATCH'],
         detail=False,
         permission_classes=(permissions.IsAuthenticated,),
-        url_path='me')
+        url_path='me',
+    )
     def get_user_info(self, request):
         serializer = UserSerializer(request.user)
         if request.method == 'PATCH':
             if 'role' in request.data:
                 return Response(
                     {'detail': 'Вы не можете изменять роль.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             if request.user.is_admin:
                 serializer = UserSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
+                    request.user, data=request.data, partial=True
+                )
             else:
                 serializer = UserAdminEditSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
+                    request.user, data=request.data, partial=True
+                )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -126,26 +131,38 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
     permission_classes = (IsAdminOrReadOnly,)
 
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            # Запретить PUT запросы
+            return Response({'detail': 'PUT method is not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
+        # Для PATCH запросов вызывать стандартную реализацию
+        return super().update(request, *args, **kwargs)
 
-class GenreViewSet(viewsets.ModelViewSet):
+
+class GenreViewSet(
+    mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, GenericViewSet
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
     permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
-    permission_classes = (permissions.IsAuthenticated, IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
+    lookup_field = 'slug'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
