@@ -1,9 +1,26 @@
-from django.contrib.auth import get_user_model
-from rest_framework import generics, status, permissions, viewsets
-from reviews.models import Title, Genre, Category, Review
-from rest_framework.decorators import action
 from rest_framework import generics, status, permissions, viewsets, filters
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
+from rest_framework.pagination import (
+    PageNumberPagination,
+    LimitOffsetPagination,
+)
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.response import Response
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+
+from .filters import TitleFilter
+from reviews.models import Title, Genre, Category, Review
+from .mixins import ModelMixinSet
+from api.sending_mail import send_email_to_user
+from api.permissions import (
+    IsAdminOrReadOnly,
+    IsAdmin,
+    IsModerator,
+    IsAuthor,
+)
 from .serializers import (
     CommentSerializer,
     TitleSerializer,
@@ -13,23 +30,9 @@ from .serializers import (
     TokenSerializer,
     ReviewSerializer,
     UserAdminEditSerializer,
-    SignUpSerializer
+    SignUpSerializer,
 )
-from django.contrib.auth.tokens import default_token_generator
-from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-from api.sending_mail import send_email_to_user
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import LimitOffsetPagination
-from django_filters.rest_framework import DjangoFilterBackend
-from .filters import TitleFilter
-from api.permissions import (
-    IsAdminOrReadOnly,
-    IsAdmin,
-    IsModerator,
-    IsAuthor,
-)
-from .mixins import ModelMixinSet
+
 
 User = get_user_model()
 
@@ -71,10 +74,13 @@ class CreateJWTTokenView(generics.CreateAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated, IsAdmin,)
+    permission_classes = (
+        permissions.IsAuthenticated,
+        IsAdmin,
+    )
     lookup_field = 'username'
-    filter_backends = (filters.SearchFilter, )
-    search_fields = ('username', )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
     pagination_class = PageNumberPagination
     http_method_names = ['get', 'post', 'delete', 'patch']
 
@@ -82,25 +88,24 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=['GET', 'PATCH'],
         detail=False,
         permission_classes=(permissions.IsAuthenticated,),
-        url_path='me')
+        url_path='me',
+    )
     def get_user_info(self, request):
         serializer = UserSerializer(request.user)
         if request.method == 'PATCH':
             if 'role' in request.data:
                 return Response(
                     {'detail': 'Вы не можете изменять роль.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             if request.user.is_admin:
                 serializer = UserSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
+                    request.user, data=request.data, partial=True
+                )
             else:
                 serializer = UserAdminEditSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
+                    request.user, data=request.data, partial=True
+                )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -115,7 +120,10 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
     permission_classes = (IsAdminOrReadOnly,)
     http_method_names = [
-        'get', 'post', 'patch', 'delete',
+        'get',
+        'post',
+        'patch',
+        'delete',
     ]
 
 
@@ -132,7 +140,10 @@ class CategoryViewSet(ModelMixinSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     http_method_names = [
-        'get', 'post', 'patch', 'delete',
+        'get',
+        'post',
+        'patch',
+        'delete',
     ]
     permission_classes = (IsAuthor | IsModerator | IsAdmin,)
 
@@ -149,7 +160,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     http_method_names = [
-        'get', 'post', 'patch', 'delete',
+        'get',
+        'post',
+        'patch',
+        'delete',
     ]
     permission_classes = (IsAuthor | IsModerator | IsAdmin,)
 
