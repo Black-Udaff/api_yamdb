@@ -23,15 +23,13 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TitleFilter
-from rest_framework.filters import SearchFilter
 from api.permissions import (
     IsAdminOrReadOnly,
     IsAdmin,
     IsModerator,
     IsAuthor,
 )
-from rest_framework import mixins
-from rest_framework.viewsets import GenericViewSet
+from .mixins import ModelMixinSet
 
 User = get_user_model()
 
@@ -44,17 +42,6 @@ class SignUpView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # user, created = User.objects.get_or_create(**serializer.validated_data)
-        # if created:
-        #     token = default_token_generator.make_token(user)
-        #     send_email_to_user(email=user.email, code=token)
-        #     return Response(serializer.data, status=status.HTTP_200_OK)
-        # else:
-        #     return Response(
-        #         {"message": "User already exists"},
-        #         status=status.HTTP_400_BAD_REQUEST,
-        #     )
-
         user, _ = User.objects.get_or_create(**serializer.validated_data)
         token = default_token_generator.make_token(user)
         send_email_to_user(email=user.email, code=token)
@@ -127,40 +114,25 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     permission_classes = (IsAdminOrReadOnly,)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            # Запретить PUT запросы
-            return Response({'detail': 'PUT method is not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-        # Для PATCH запросов вызывать стандартную реализацию
-        return super().update(request, *args, **kwargs)
+    http_method_names = [
+        'get', 'post', 'patch', 'delete',
+    ]
 
 
-class GenreViewSet(
-    mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, GenericViewSet
-):
+class GenreViewSet(ModelMixinSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    permission_classes = (IsAdminOrReadOnly,)
-    lookup_field = 'slug'
 
 
-class CategoryViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, mixins.ListModelMixin, GenericViewSet):
+class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    permission_classes = (IsAdminOrReadOnly,)
-    lookup_field = 'slug'
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     http_method_names = [
-        'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
+        'get', 'post', 'patch', 'delete',
     ]
     permission_classes = (IsAuthor | IsModerator | IsAdmin,)
 
@@ -177,7 +149,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     http_method_names = [
-        'get', 'post', 'patch', 'delete', 'head', 'options', 'trace'
+        'get', 'post', 'patch', 'delete',
     ]
     permission_classes = (IsAuthor | IsModerator | IsAdmin,)
 

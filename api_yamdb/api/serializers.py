@@ -19,18 +19,16 @@ class ValidateMixin:
         ):
             return data
         elif User.objects.filter(username=data.get('username')):
-            raise serializers.ValidationError(
-                'Это имя уже занято'
-            )
+            raise serializers.ValidationError('Это имя уже занято')
         elif User.objects.filter(email=data.get('email')):
-            raise serializers.ValidationError(
-                'Эта почта уже занята'
-            )
+            raise serializers.ValidationError('Эта почта уже занята')
         return data
 
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError('Вы не можете использовать это имя')
+            raise serializers.ValidationError(
+                'Вы не можете использовать это имя'
+            )
         return value
 
 
@@ -51,8 +49,14 @@ class UserSerializer(ValidateMixin, serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'role')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role',
+        )
 
 
 class TokenSerializer(serializers.Serializer):
@@ -98,7 +102,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-
     genre = serializers.SlugRelatedField(
         many=True, slug_field='slug', queryset=Genre.objects.all()
     )
@@ -109,19 +112,22 @@ class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ['id', 'name', 'year', 'rating', 'description', 'genre', 'category']
+        fields = '__all__'
         model = Title
 
     def to_representation(self, instance):
-        # Получаем стандартное представление данных
-        representation = super(
-            TitleSerializer, self).to_representation(instance)
+        representation = super(TitleSerializer, self).to_representation(
+            instance
+        )
 
         representation['genre'] = GenreSerializer(
-            instance.genre.all(), many=True).data
+            instance.genre.all(), many=True
+        ).data
+
         if instance.category:
             representation['category'] = CategorySerializer(
-                instance.category).data
+                instance.category
+            ).data
 
         return representation
 
@@ -142,8 +148,9 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(
-        read_only=True, slug_field='username',
-        default=serializers.CurrentUserDefault()
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
@@ -157,14 +164,16 @@ class ReviewSerializer(serializers.ModelSerializer):
             'author_id', flat=True
         ):
             raise serializers.ValidationError(
-                'Вы уже оставляли отзыв на это произведение.')
+                'Вы уже оставляли отзыв на это произведение.'
+            )
         return Review.objects.create(**validated_data)
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(
-        read_only=True, slug_field='username',
-        default=serializers.CurrentUserDefault()
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
