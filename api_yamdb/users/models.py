@@ -32,6 +32,7 @@ class User(AbstractUser):
     role = models.CharField(
         'Роль', choices=Role.choices, default=Role.USER, max_length=10
     )
+    validation_code = models.CharField(max_length=6, blank=True, null=True)
 
     @property
     def is_admin(self):

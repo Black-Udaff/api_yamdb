@@ -6,16 +6,16 @@ from api.views import (
     TitleViewSet,
     GenreViewSet,
     CategoryViewSet,
-    CreateJWTTokenView,
+    # CreateJWTTokenView,
     SignUpView,
     ReviewViewSet,
-    UserViewSet,
+    # UserViewSet,
     CommentViewSet,
 )
 
 
 router = routers.DefaultRouter()
-router.register(r'users', UserViewSet)
+# router.register(r'users', UserViewSet)
 router.register(r'titles', TitleViewSet)
 router.register(r'categories', CategoryViewSet)
 router.register(r'genres', GenreViewSet)
@@ -30,6 +30,6 @@ router.register(
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('v1/auth/signup/', SignUpView.as_view()),
-    path('v1/auth/token/', CreateJWTTokenView.as_view()),
+    path('v1/auth/signup/', SignUpView.as_view({'post': 'create'}))
+    # path('v1/auth/token/', CreateJWTTokenView.as_view()),
 ]
