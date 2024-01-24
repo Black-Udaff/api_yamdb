@@ -87,10 +87,26 @@ User = get_user_model()
 #     role = serializers.CharField(read_only=True)
 
 class SignUpSerializer(serializers.ModelSerializer):
+    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
+    email = serializers.EmailField(max_length=254)
     class Meta:
         model = User
         fields = ['username', 'email']
 
+    def validate(self, data):
+        if User.objects.filter(
+            username=data.get('username'), email=data.get('email')
+        ):
+            return data
+        elif User.objects.filter(username=data.get('username')):
+            raise serializers.ValidationError('Это имя уже занято')
+        elif User.objects.filter(email=data.get('email')):
+            raise serializers.ValidationError('Эта почта уже занята')
+        return data
+    
+class TokenSerializer(serializers.Serializer):
+    username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
+    confirmation_code = serializers.CharField(required=True)
         
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:

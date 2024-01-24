@@ -27,7 +27,7 @@ from .serializers import (
     CategorySerializer,
     GenreSerializer,
     # UserSerializer,
-    # TokenSerializer,
+    TokenSerializer,
     ReviewSerializer,
     # UserAdminEditSerializer,
     SignUpSerializer,
@@ -120,11 +120,29 @@ class SignUpView(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        user.validation_code = get_random_string(6)
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        code = get_random_string(6)
+        send_email_to_user(user.email, code)
+        user.validation_code = code
         user.save()
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class CreateJWTTokenView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = TokenSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(User, username=serializer.validated_data['username'])
+        if user.validation_code == serializer.validated_data['confirmation_code']:
+            token = AccessToken.for_user(user)
+            return Response({'token': str(token)}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()

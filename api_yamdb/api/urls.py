@@ -6,7 +6,7 @@ from api.views import (
     TitleViewSet,
     GenreViewSet,
     CategoryViewSet,
-    # CreateJWTTokenView,
+    CreateJWTTokenView,
     SignUpView,
     ReviewViewSet,
     # UserViewSet,
@@ -30,6 +30,6 @@ router.register(
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('v1/auth/signup/', SignUpView.as_view({'post': 'create'}))
-    # path('v1/auth/token/', CreateJWTTokenView.as_view()),
+    path('v1/auth/signup/', SignUpView.as_view({'post': 'create'})),
+    path('v1/auth/token/', CreateJWTTokenView.as_view()),
 ]
