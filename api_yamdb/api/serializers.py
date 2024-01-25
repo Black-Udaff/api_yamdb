@@ -107,7 +107,10 @@ class SignUpSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.Serializer):
     username = serializers.RegexField(regex=r'^[\w.@+-]+\Z', max_length=150)
     confirmation_code = serializers.CharField(required=True)
-        
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
