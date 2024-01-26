@@ -4,11 +4,15 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 
+from .consts import (
+    NAME_MAX_LENGTH,
+    SLUG_MAX_LENGTH,
+    MAX_LENGTH_TITLE,
+    MIN_SCORE,
+    MAX_SCORE,
+    SCORE_ERROR,
+)
 
-MAX_LENGTH_TITLE = 15
-MIN_SCORE = 1
-MAX_SCORE = 10
-SCORE_ERROR = 'Введите целое число от 1 до 10'
 
 User = get_user_model()
 
@@ -20,8 +24,8 @@ class YearValidator:
 
 
 class Category(models.Model):
-    name = models.CharField('Имя', max_length=256)
-    slug = models.SlugField(max_length=50, unique=True)
+    name = models.CharField('Имя', max_length=NAME_MAX_LENGTH)
+    slug = models.SlugField('Слаг', max_length=50, unique=SLUG_MAX_LENGTH)
 
     class Meta:
         verbose_name = 'категория'
@@ -32,8 +36,8 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField('Имя', max_length=256)
-    slug = models.SlugField('Слаг', max_length=50, unique=True)
+    name = models.CharField('Имя', max_length=NAME_MAX_LENGTH)
+    slug = models.SlugField('Слаг', max_length=SLUG_MAX_LENGTH, unique=True)
 
     class Meta:
         verbose_name = 'жанр'
@@ -44,9 +48,14 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField('Название', max_length=256)
+    name = models.CharField('Название', max_length=NAME_MAX_LENGTH)
     description = models.TextField('Описание')
-    year = models.IntegerField('Год', validators=[YearValidator(),])
+    year = models.IntegerField(
+        'Год',
+        validators=[
+            YearValidator(),
+        ],
+    )
     genre = models.ManyToManyField(
         Genre, through='genre_title', verbose_name='Жанр'
     )
@@ -67,7 +76,7 @@ class Title(models.Model):
         return self.name
 
 
-class genre_title(models.Model):
+class Genre_Title(models.Model):
     title_id = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -81,6 +90,9 @@ class genre_title(models.Model):
         verbose_name='Жанр',
     )
 
+    class Meta:
+        verbose_name = 'Связь жанра и произведения'
+        verbose_name_plural = 'Связи жанров и произведений'
 
 class Review(models.Model):
     title = models.ForeignKey(
@@ -96,7 +108,7 @@ class Review(models.Model):
         related_name='reviews',
         verbose_name='Автор отзыва',
     )
-    score = models.IntegerField(
+    score = models.PositiveSmallIntegerField(
         'Оценка',
         validators=[
             MaxValueValidator(MAX_SCORE, message=SCORE_ERROR),

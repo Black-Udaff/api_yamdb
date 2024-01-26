@@ -10,7 +10,6 @@ class TitleFilter(django_filters.FilterSet):
         field_name='genre__slug', lookup_expr='icontains'
     )
     name = django_filters.CharFilter(lookup_expr='icontains')
-    year = django_filters.NumberFilter(lookup_expr='exact')
 
     class Meta:
         model = Title

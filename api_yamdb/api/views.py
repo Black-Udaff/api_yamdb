@@ -114,7 +114,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
@@ -126,9 +126,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         'patch',
         'delete',
     ]
-
-    def get_queryset(self):
-        return Title.objects.annotate(rating=Avg('reviews__score'))
 
 
 class GenreViewSet(ModelMixinSet):
