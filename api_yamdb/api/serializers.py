@@ -16,11 +16,11 @@ class ValidateMixin:
     def validate(self, data):
         if User.objects.filter(
             username=data.get('username'), email=data.get('email')
-        ):
+        ).exists():
             return data
-        elif User.objects.filter(username=data.get('username')):
+        elif User.objects.filter(username=data.get('username')).exists():
             raise serializers.ValidationError('Это имя уже занято')
-        elif User.objects.filter(email=data.get('email')):
+        elif User.objects.filter(email=data.get('email')).exists():
             raise serializers.ValidationError('Эта почта уже занята')
         return data
 
