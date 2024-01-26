@@ -33,7 +33,6 @@ from .serializers import (
     SignUpSerializer,
 )
 from django.core.mail import send_mail
-from django.db.models import Avg
 
 
 EMAIL = 'yandexyamdb@yandex.ru'
