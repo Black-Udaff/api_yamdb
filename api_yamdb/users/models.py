@@ -1,6 +1,13 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
+from django.core.exceptions import ValidationError
+
+
+class NameValidator:
+    def __call__(self, value):
+        if value == "me":
+            raise ValidationError('Имя "me" недопустимо.')
 
 
 class User(AbstractUser):
@@ -13,7 +20,8 @@ class User(AbstractUser):
         'Юзернейм',
         max_length=150,
         unique=True,
-        validators=[RegexValidator(regex=r'^[\w.@+-]+\Z')],
+        validators=[RegexValidator(regex=r'^[\w.@+-]+\Z'),
+                    NameValidator()],
     )
     email = models.EmailField(
         'Емэил',
@@ -40,3 +48,8 @@ class User(AbstractUser):
     @property
     def is_moderator(self):
         return self.role == self.Role.MODERATOR
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
