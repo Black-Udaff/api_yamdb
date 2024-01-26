@@ -33,6 +33,8 @@ from .serializers import (
     SignUpSerializer,
 )
 from django.core.mail import send_mail
+from django.db.models import Avg
+
 
 EMAIL = 'yandexyamdb@yandex.ru'
 
@@ -134,6 +136,9 @@ class TitleViewSet(viewsets.ModelViewSet):
         'patch',
         'delete',
     ]
+
+    def get_queryset(self):
+        return Title.objects.annotate(rating=Avg('reviews__score'))
 
 
 class GenreViewSet(ModelMixinSet):
