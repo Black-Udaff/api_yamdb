@@ -109,7 +109,7 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug', queryset=Category.objects.all()
     )
     description = serializers.CharField(required=False, allow_blank=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -137,13 +137,6 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('произведение еще не вышло')
         return value
 
-    def get_rating(self, obj):
-        title = get_object_or_404(Title, pk=obj.pk)
-        rating_dict = title.reviews.all().aggregate(score=Avg('score'))
-        rating = rating_dict.get('score')
-        if rating:
-            return round(rating)
-        return None
 
 
 class ReviewSerializer(serializers.ModelSerializer):

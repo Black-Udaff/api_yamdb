@@ -1,6 +1,8 @@
+from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
 
 
 MAX_LENGTH_TITLE = 15
@@ -9,6 +11,12 @@ MAX_SCORE = 10
 SCORE_ERROR = 'Введите целое число от 1 до 10'
 
 User = get_user_model()
+
+
+class YearValidator:
+    def __call__(self, value):
+        if value > datetime.now().year:
+            raise ValidationError('произведение еще не вышло')
 
 
 class Category(models.Model):
@@ -38,7 +46,7 @@ class Genre(models.Model):
 class Title(models.Model):
     name = models.CharField('Название', max_length=256)
     description = models.TextField('Описание')
-    year = models.IntegerField('Год')
+    year = models.IntegerField('Год', validators=[YearValidator(),])
     genre = models.ManyToManyField(
         Genre, through='genre_title', verbose_name='Жанр'
     )

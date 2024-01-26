@@ -10,6 +10,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Avg
 
 from .filters import TitleFilter
 from reviews.models import Title, Genre, Category, Review
@@ -125,6 +126,9 @@ class TitleViewSet(viewsets.ModelViewSet):
         'patch',
         'delete',
     ]
+
+    def get_queryset(self):
+        return Title.objects.annotate(rating=Avg('reviews__score'))
 
 
 class GenreViewSet(ModelMixinSet):
