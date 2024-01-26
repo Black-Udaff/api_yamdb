@@ -15,7 +15,6 @@ from django.db.models import Avg
 from .filters import TitleFilter
 from reviews.models import Title, Genre, Category, Review
 from .mixins import ModelMixinSet
-from api.sending_mail import send_email_to_user
 from api.permissions import (
     IsAdminOrReadOnly,
     IsAdmin,
@@ -33,6 +32,9 @@ from .serializers import (
     UserAdminEditSerializer,
     SignUpSerializer,
 )
+from django.core.mail import send_mail
+
+EMAIL = 'yandexyamdb@yandex.ru'
 
 
 User = get_user_model()
@@ -48,7 +50,13 @@ class SignUpView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user, _ = User.objects.get_or_create(**serializer.validated_data)
         token = default_token_generator.make_token(user)
-        send_email_to_user(email=user.email, code=token)
+        send_mail(
+            subject='Подтвердите регистрацию',
+            message=f'Ваш код: {token}',
+            from_email=EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
