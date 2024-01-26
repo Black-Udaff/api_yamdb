@@ -1,11 +1,32 @@
 from django.contrib import admin
-
+from django.contrib.auth.models import Group
 
 from .models import Category, Comment, Genre, Review, Title
 
 
-admin.site.register(Title)
-admin.site.register(Genre)
-admin.site.register(Category)
-admin.site.register(Comment)
-admin.site.register(Review)
+@admin.register(Title)
+class TitleAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Genre)
+class GenreAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    pass
+
+
+admin.site.unregister(Group)

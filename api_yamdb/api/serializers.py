@@ -1,5 +1,4 @@
 from datetime import datetime
-from django.db.models import Avg
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -109,7 +108,7 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug', queryset=Category.objects.all()
     )
     description = serializers.CharField(required=False, allow_blank=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(read_only=True)
 
     class Meta:
         fields = '__all__'
@@ -137,36 +136,28 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('произведение еще не вышло')
         return value
 
-    def get_rating(self, obj):
-        title = get_object_or_404(Title, pk=obj.pk)
-        rating_dict = title.reviews.all().aggregate(score=Avg('score'))
-        rating = rating_dict.get('score')
-        if rating:
-            return round(rating)
-        return None
-
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(
         read_only=True,
         slug_field='username',
-        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
 
-    def create(self, validated_data):
-        title_id = self.context['view'].kwargs.get('title_id')
-        reviews = get_object_or_404(Title, pk=title_id).reviews.all()
-        if self.context['request'].user.id in reviews.values_list(
-            'author_id', flat=True
-        ):
-            raise serializers.ValidationError(
-                'Вы уже оставляли отзыв на это произведение.'
-            )
-        return Review.objects.create(**validated_data)
+    def validate(self, data):
+        if self.instance is None:
+            title_id = self.context['view'].kwargs.get('title_id')
+            reviews = get_object_or_404(Title, pk=title_id).reviews.all()
+            if reviews.filter(
+                author_id=self.context['request'].user.id
+            ).exists():
+                raise serializers.ValidationError(
+                    'Вы уже оставляли отзыв на это произведение.'
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
