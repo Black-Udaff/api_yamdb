@@ -24,12 +24,6 @@ def validate_year(value):
 
 class BaseReviewCommentModel(models.Model):
     text = models.TextField('Текст')
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Автор',
-    )
     pub_date = models.DateTimeField(
         'Дата публикации', auto_now_add=True, db_index=True
     )
@@ -116,6 +110,12 @@ class Review(BaseReviewCommentModel):
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='Автор',
     )
     score = models.PositiveSmallIntegerField(
         'Оценка',
