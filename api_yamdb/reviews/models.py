@@ -14,16 +14,14 @@ from .consts import (
 )
 
 
-
 User = get_user_model()
 
 
-class YearValidator:
-    def __call__(self, value):
-        if value > datetime.now().year:
-            raise ValidationError('произведение еще не вышло')
-        
-        
+def validate_year(value):
+    if value > datetime.now().year:
+        raise ValidationError('Произведение еще не вышло')
+
+
 class BaseReviewCommentModel(models.Model):
     text = models.TextField('Текст')
     author = models.ForeignKey(
@@ -70,7 +68,7 @@ class Title(models.Model):
     year = models.IntegerField(
         'Год',
         validators=[
-            YearValidator(),
+            validate_year,
         ],
     )
     genre = models.ManyToManyField(
@@ -110,6 +108,7 @@ class Genre_Title(models.Model):
     class Meta:
         verbose_name = 'Связь жанра и произведения'
         verbose_name_plural = 'Связи жанров и произведений'
+
 
 class Review(BaseReviewCommentModel):
     title = models.ForeignKey(

@@ -4,10 +4,10 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
-class NameValidator:
-    def __call__(self, value):
-        if value == "me":
-            raise ValidationError('Имя "me" недопустимо.')
+
+def name_validator(value):
+    if value == "me":
+        raise ValidationError('Имя "me" недопустимо.')
 
 
 class User(AbstractUser):
@@ -21,7 +21,7 @@ class User(AbstractUser):
         max_length=150,
         unique=True,
         validators=[RegexValidator(regex=r'^[\w.@+-]+\Z'),
-                    NameValidator()],
+                    name_validator],
     )
     email = models.EmailField(
         'Емэил',
