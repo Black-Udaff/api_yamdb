@@ -4,7 +4,6 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
-
 def name_validator(value):
     if value == "me":
         raise ValidationError('Имя "me" недопустимо.')
